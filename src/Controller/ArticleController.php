@@ -42,7 +42,7 @@ final class ArticleController extends AbstractController
 
         return $this->json($article, 201, [], ['groups' => 'article:read']);
     }
-    #[Route('/api/articles/{id}', name: 'get_article_by_id', methods: ['GET'])]
+    #[Route('/api/articles/{id}', requirements: ['id' => '\d+'], name: 'get_article_by_id', methods: ['GET'])]
     public function getArticleById(int $id, ArticleRepository $articleRepository): JsonResponse
     {
         $article = $articleRepository->find($id);
@@ -92,4 +92,19 @@ final class ArticleController extends AbstractController
         return new JsonResponse(['message' => 'Article supprimé avec succès'], JsonResponse::HTTP_NO_CONTENT);
     }
 
+    
+    #[Route('/api/articles/searchByPrice', name: 'search_articles', methods: ['GET'])]
+    public function searchByPrice(Request $request, ArticleRepository $articleRepository): JsonResponse
+    {
+        $min = $request->query->get('min');
+        $max = $request->query->get('max');
+
+        if (!is_numeric($min) || !is_numeric($max)) {
+            return new JsonResponse(['error' => 'Les valeurs doivent être numériques.'], 400);
+        }
+
+        $articles = $articleRepository->findByPriceRange((float) $min, (float) $max);
+
+        return $this->json($articles, 200, [], ['groups' => 'article:read']);
+    }
 }

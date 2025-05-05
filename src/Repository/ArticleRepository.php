@@ -40,4 +40,15 @@ class ArticleRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+    public function findByPriceRange(float $min, float $max): array
+{
+    return $this->createQueryBuilder('a')
+        ->andWhere('a.prix >= :min')
+        ->andWhere('a.prix <= :max')
+        ->setParameter('min', $min)
+        ->setParameter('max', $max)
+        ->getQuery()
+        ->getResult();
+}
+
 }
