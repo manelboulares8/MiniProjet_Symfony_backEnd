@@ -36,6 +36,9 @@ class Commande
     #[Groups(['commande:read'])]
     private float $total;
 
+    #[ORM\ManyToOne(inversedBy: 'commandes')]
+#[ORM\JoinColumn(nullable: true)]
+private ?Client $client = null;
     public function getTotal(): float
     {
         return $this->total;
@@ -102,5 +105,16 @@ class Commande
     public function getArticleId(): ?int
     {
         return $this->article?->getId();
+    }
+    public function getClient(): ?Client
+    {
+        return $this->client;
+    }
+
+    public function setClient(?Client $client): self
+    {
+        $this->client = $client;
+
+        return $this;
     }
 }

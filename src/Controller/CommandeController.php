@@ -38,17 +38,17 @@ final class CommandeController extends AbstractController
     public function create(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-    
+
         // Validation des données
         if (!isset($data['article']) || !isset($data['quantite'])) {
             return $this->json(['message' => 'Données manquantes'], Response::HTTP_BAD_REQUEST);
         }
-    
+
         $article = $em->getRepository(Article::class)->find($data['article']);
         if (!$article) {
             return $this->json(['message' => 'Article non trouvé'], Response::HTTP_NOT_FOUND);
         }
-    
+
         // Vérification du stock
         if ($article->getStock() < $data['quantite']) {
             return $this->json(
@@ -56,10 +56,10 @@ final class CommandeController extends AbstractController
                 Response::HTTP_BAD_REQUEST
             );
         }
-    
+
         // Calcul du total
         $total = $article->getPrix() * $data['quantite'];
-    
+
         // Création de la commande
         $commande = new Commande();
         $commande->setArticle($article);
@@ -67,14 +67,14 @@ final class CommandeController extends AbstractController
         $commande->setStatus($data['status'] ?? 'en cours');
         $commande->setDateCommande(new \DateTime());
         $commande->setTotal($total); // Assurez-vous d'avoir cette propriété dans l'entité Commande
-    
+
         // Mise à jour du stock
         $article->setStock($article->getStock() - $data['quantite']);
-    
+
         $em->persist($commande);
         $em->persist($article);
         $em->flush();
-    
+
         return $this->json([
             'message' => 'Commande créée avec succès',
             'commande' => $commande,
@@ -92,6 +92,13 @@ final class CommandeController extends AbstractController
         }
         if (isset($data['status'])) {
             $commande->setStatus($data['status']);
+        }
+        if (isset($data['articleId'])) {
+            $article = $em->getRepository(Article::class)->find($data['articleId']);
+            if (!$article) {
+                return $this->json(['error' => 'Article non trouvé'], Response::HTTP_BAD_REQUEST);
+            }
+            $commande->setArticle($article);
         }
 
         $em->flush();
