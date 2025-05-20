@@ -40,4 +40,24 @@ class CommandeRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+    // Dans CommandeRepository.php
+    public function findAllWithClient()
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.client', 'client')
+            ->addSelect('client')
+            ->getQuery()
+            ->getResult();
+    }
+    public function findClientNameByCommande(int $commandeId): ?string
+    {
+        return $this->createQueryBuilder('c')
+            ->select('client.nom')
+            ->leftJoin('c.client', 'client')
+            ->where('c.id = :id')
+            ->setParameter('id', $commandeId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }

@@ -11,25 +11,30 @@ use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use App\Entity\Article;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
+
 final class ArticleController extends AbstractController
 {
     #[Route('/api/articles', name: 'app_articles')]
-    public function index(ArticleRepository $repo): JsonResponse
+    public function index(ArticleRepository $repo, SessionInterface $session): JsonResponse
     {
         $articles = $repo->findAll();
 
         $data = [];
 
         foreach ($articles as $article) {
+            $clientId = $session->get('client_id');
+
             $data[] = [
                 'id' => $article->getId(),
                 'nom' => $article->getNom(),
                 'description' => $article->getDescription(),
                 'prix' => $article->getPrix(),
                 'stock' => $article->getStock(),
+                'clientId' => $clientId,
+
             ];
         }
-
         return $this->json($data);
     }
 
@@ -43,8 +48,10 @@ final class ArticleController extends AbstractController
         return $this->json($article, 201, [], ['groups' => 'article:read']);
     }
     #[Route('/api/articles/{id}', requirements: ['id' => '\d+'], name: 'get_article_by_id', methods: ['GET'])]
-    public function getArticleById(int $id, ArticleRepository $articleRepository): JsonResponse
+    public function getArticleById(int $id, ArticleRepository $articleRepository, SessionInterface $session): JsonResponse
     {
+        $clientId = $session->get('client_id');
+
         $article = $articleRepository->find($id);
 
         if (!$article) {
@@ -92,7 +99,7 @@ final class ArticleController extends AbstractController
         return new JsonResponse(['message' => 'Article supprimé avec succès'], JsonResponse::HTTP_NO_CONTENT);
     }
 
-    
+
     #[Route('/api/articles/searchByPrice', name: 'search_articles', methods: ['GET'])]
     public function searchByPrice(Request $request, ArticleRepository $articleRepository): JsonResponse
     {

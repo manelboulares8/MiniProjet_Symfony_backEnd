@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 #[Route('/api/clients')]
 class ClientController extends AbstractController
 {
@@ -130,5 +130,74 @@ class ClientController extends AbstractController
         ]);
 
         return new JsonResponse($data, Response::HTTP_OK, [], true);
+    }
+
+
+    #[Route('/login', name: 'api_client_login', methods: ['POST'])]
+    public function login(Request $request, ClientRepository $clientRepository, SessionInterface $session): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
+
+        $client = $clientRepository->findOneBy(['email' => $email]);
+
+        if (!$client || $client->getPassword() !== $password) {
+            return new JsonResponse(['error' => 'Invalid credentials'], 401);
+        }
+
+        // Stockage de l'ID client dans la session
+        $session->set('client_id', $client->getId());
+
+        return new JsonResponse([
+            'id' => $client->getId(),
+            'nom' => $client->getNom(),
+            'role' => $client->getRole(),
+            'email' => $client->getEmail()
+        ]);
+    }
+    #[Route('/register', name: 'app_client_register', methods: ['POST'])]
+    public function register(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        // Validation
+        if (!isset($data['nom']) || !isset($data['email']) || !isset($data['password']) || !isset($data['adresse'])) {
+            return $this->json(['error' => 'Tous les champs sont obligatoires'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Vérifier si l'email existe déjà
+        $existingClient = $em->getRepository(Client::class)->findOneBy(['email' => $data['email']]);
+        if ($existingClient) {
+            return $this->json(['error' => 'Cet email est déjà utilisé'], Response::HTTP_CONFLICT);
+        }
+
+        // Créer le client
+        $client = new Client();
+        $client->setNom($data['nom']);
+        $client->setEmail($data['email']);
+        $client->setAdresse($data['adresse']);
+        $client->setRole('user');
+
+        // Hasher le mot de passe
+        //   $hashedPassword = $passwordHasher->hashPassword($client, $data['password']);
+        $client->setPassword($data['password']);
+
+        $em->persist($client);
+        $em->flush();
+
+        return $this->json([
+            'id' => $client->getId(),
+            'nom' => $client->getNom(),
+            'email' => $client->getEmail(),
+            'role' => $client->getRole()
+        ], Response::HTTP_CREATED);
+    }
+
+    #[Route('/users', name: 'app_clients_users', methods: ['GET'])]
+    public function getUsers(ClientRepository $repository): JsonResponse
+    {
+        $users = $repository->findBy(['role' => 'user']);
+        return $this->json($users, 200, [], ['groups' => 'client:read']);
     }
 }

@@ -19,6 +19,7 @@ class Client
 
     #[ORM\Column(length: 255)]
     #[Groups(['client:read', 'client:details'])]
+    #[Groups(['commande:read'])] // Ajoutez ceci
     private ?string $nom = null;
 
     #[ORM\Column(length: 255)]
@@ -26,12 +27,40 @@ class Client
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['client:details'])]
+    #[Groups(['client:read', 'client:details'])]
     private ?string $adresse = null;
 
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Commande::class)]
     #[Groups(['client:details'])]
     private Collection $commandes;
+
+    #[ORM\Column(length: 50)]
+    #[Groups(['client:read', 'client:details'])]
+    private ?string $role = 'user';
+    #[ORM\Column(length: 255)]
+    private ?string $password = null;
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+        return $this;
+    }
+
+    public function getRole(): ?string
+    {
+        return $this->role;
+    }
+
+    public function setRole(string $role): static
+    {
+        $this->role = $role;
+        return $this;
+    }
 
     public function __construct()
     {
