@@ -42,15 +42,15 @@ class ClientController extends AbstractController
         return $this->json($clients, Response::HTTP_OK, [], ['groups' => 'client:read']);
     }
 
-    #[Route('/{id}', name: 'app_client_show', methods: ['GET'])]
-    public function show(Client $client): JsonResponse
-    {
-        $data = $this->serializer->serialize($client, 'json', [
-            'groups' => ['client:read', 'client:details']
-        ]);
+    /*  #[Route('/{id}', name: 'app_client_show', methods: ['GET'])]
+      public function show(Client $client): JsonResponse
+      {
+          $data = $this->serializer->serialize($client, 'json', [
+              'groups' => ['client:read', 'client:details']
+          ]);
 
-        return new JsonResponse($data, Response::HTTP_OK, [], true);
-    }
+          return new JsonResponse($data, Response::HTTP_OK, [], true);
+      }*/
     /*
         #[Route('/api/clients', name: 'app_client_create', methods: ['POST'])]
         public function create(Request $request): JsonResponse
@@ -194,10 +194,20 @@ class ClientController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    #[Route('/users', name: 'app_clients_users', methods: ['GET'])]
-    public function getUsers(ClientRepository $repository): JsonResponse
+    #[Route('/list-users', name: 'app_clients_list_users', methods: ['GET'])]
+    public function listUsers(ClientRepository $repository): JsonResponse
     {
+        // Debug: Vérifiez que la méthode est appelée
+        error_log("Endpoint /api/clients/list-users appelé");
+
         $users = $repository->findBy(['role' => 'user']);
-        return $this->json($users, 200, [], ['groups' => 'client:read']);
+
+        // Debug: Vérifiez les résultats
+        error_log("Nombre d'utilisateurs trouvés: " . count($users));
+
+        return $this->json($users, Response::HTTP_OK, [], ['groups' => 'client:read']);
     }
+
+
+
 }

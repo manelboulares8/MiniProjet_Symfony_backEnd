@@ -18,8 +18,7 @@ class Client
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(['client:read', 'client:details'])]
-    #[Groups(['commande:read'])] // Ajoutez ceci
+    #[Groups(['client:read', 'client:details', 'commande:read'])]
     private ?string $nom = null;
 
     #[ORM\Column(length: 255)]
